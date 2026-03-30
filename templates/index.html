@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Text Detector</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f0f1a;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.4rem;
+            background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #888;
+            font-size: 1.05rem;
+        }
+
+        /* Input Card */
+        .card {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4a;
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 180px;
+            background: #12121f;
+            border: 1px solid #333;
+            border-radius: 12px;
+            color: #e0e0e0;
+            font-size: 1rem;
+            padding: 16px;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        textarea:focus {
+            border-color: #6366f1;
+        }
+
+        .text-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        /* Buttons */
+        .btn-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .btn {
+            padding: 12px 32px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #2a2a4a;
+            color: #aaa;
+        }
+
+        .btn-secondary:hover {
+            background: #333360;
+        }
+
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #2a2a4a;
+            border-top-color: #6366f1;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Results */
+        .results {
+            display: none;
+        }
+
+        /* Verdict */
+        .verdict-card {
+            text-align: center;
+            padding: 32px;
+        }
+
+        .verdict-label {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .verdict-label.ai {
+            color: #ef4444;
+        }
+
+        .verdict-label.human {
+            color: #22c55e;
+        }
+
+        .confidence-text {
+            font-size: 1.1rem;
+            color: #888;
+        }
+
+        .confidence-bar-container {
+            margin-top: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .bar-label {
+            font-size: 0.85rem;
+            color: #888;
+            min-width: 70px;
+            text-align: right;
+        }
+
+        .bar-label.right {
+            text-align: left;
+        }
+
+        .confidence-bar {
+            flex: 1;
+            height: 12px;
+            background: #2a2a4a;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.8s ease;
+        }
+
+        .confidence-fill.human-fill {
+            background: linear-gradient(90deg, #22c55e, #4ade80);
+        }
+
+        .confidence-fill.ai-fill {
+            background: linear-gradient(90deg, #ef4444, #f87171);
+            float: right;
+        }
+
+        /* Heatmap */
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 14px;
+            color: #bbb;
+        }
+
+        .heatmap-container {
+            line-height: 2;
+            font-size: 0.95rem;
+        }
+
+        .heatmap-token {
+            padding: 2px 4px;
+            border-radius: 4px;
+            margin: 2px;
+            display: inline-block;
+        }
+
+        /* Error */
+        .error-msg {
+            display: none;
+            background: #2d1b1b;
+            border: 1px solid #5c2626;
+            color: #f87171;
+            padding: 14px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            color: #444;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>AI Text Detector</h1>
+            <p>Analyze text to detect whether it was written by AI or a human</p>
+        </div>
+
+        <!-- Error -->
+        <div class="error-msg" id="errorMsg"></div>
+
+        <!-- Input -->
+        <div class="card">
+            <textarea id="textInput" placeholder="Paste or type your text here..."></textarea>
+            <div class="text-info">
+                <span id="wordCount">0 words</span>
+                <span id="charCount">0 characters</span>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-primary" id="analyzeBtn" onclick="analyze()">Analyze Text</button>
+                <button class="btn btn-secondary" onclick="clearAll()">Clear</button>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Analyzing text...</p>
+        </div>
+
+        <!-- Results -->
+        <div class="results" id="results">
+            <!-- Verdict -->
+            <div class="card verdict-card">
+                <div class="verdict-label" id="verdictLabel"></div>
+                <div class="confidence-text" id="confidenceText"></div>
+
+                <div class="confidence-bar-container">
+                    <span class="bar-label">Human</span>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill human-fill" id="humanBar" style="width: 0%"></div>
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill ai-fill" id="aiBar" style="width: 0%"></div>
+                    </div>
+                    <span class="bar-label right">AI</span>
+                </div>
+            </div>
+
+            <!-- Heatmap -->
+            <div class="card">
+                <div class="section-title">Token Analysis Heatmap</div>
+                <p style="font-size: 0.8rem; color: #666; margin-bottom: 12px;">
+                    Redder tokens indicate higher AI signal based on word complexity
+                </p>
+                <div class="heatmap-container" id="heatmap"></div>
+            </div>
+        </div>
+
+        <div class="footer">
+            AI Text Detector &mdash; Powered by XGBoost + DistilBERT Ensemble
+        </div>
+    </div>
+
+    <script>
+        const textInput = document.getElementById("textInput");
+        const wordCountEl = document.getElementById("wordCount");
+        const charCountEl = document.getElementById("charCount");
+
+        textInput.addEventListener("input", () => {
+            const text = textInput.value.trim();
+            const words = text ? text.split(/\s+/).length : 0;
+            wordCountEl.textContent = `${words} word${words !== 1 ? "s" : ""}`;
+            charCountEl.textContent = `${textInput.value.length} characters`;
+        });
+
+        function clearAll() {
+            textInput.value = "";
+            wordCountEl.textContent = "0 words";
+            charCountEl.textContent = "0 characters";
+            document.getElementById("results").style.display = "none";
+            document.getElementById("errorMsg").style.display = "none";
+        }
+
+        async function analyze() {
+            const text = textInput.value.trim();
+            if (!text) {
+                showError("Please enter some text to analyze.");
+                return;
+            }
+
+            const btn = document.getElementById("analyzeBtn");
+            const loading = document.getElementById("loading");
+            const results = document.getElementById("results");
+            const errorMsg = document.getElementById("errorMsg");
+
+            btn.disabled = true;
+            loading.style.display = "block";
+            results.style.display = "none";
+            errorMsg.style.display = "none";
+
+            try {
+                const res = await fetch("/analyze", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ text })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    showError(data.error || "Something went wrong.");
+                    return;
+                }
+
+                renderResults(data);
+            } catch (err) {
+                showError("Failed to connect to the server.");
+            } finally {
+                btn.disabled = false;
+                loading.style.display = "none";
+            }
+        }
+
+        function showError(msg) {
+            const el = document.getElementById("errorMsg");
+            el.textContent = msg;
+            el.style.display = "block";
+        }
+
+        function renderResults(data) {
+            const results = document.getElementById("results");
+            results.style.display = "block";
+
+            // Verdict
+            const verdictLabel = document.getElementById("verdictLabel");
+            verdictLabel.textContent = data.label;
+            verdictLabel.className = "verdict-label " + (data.label.includes("AI") ? "ai" : "human");
+
+            document.getElementById("confidenceText").textContent =
+                `${data.confidence}% confidence`;
+
+            // Bars
+            document.getElementById("humanBar").style.width = data.human_probability + "%";
+            document.getElementById("aiBar").style.width = data.ai_probability + "%";
+
+            // Heatmap
+            const heatmapEl = document.getElementById("heatmap");
+            heatmapEl.innerHTML = data.heatmap.map(t => {
+                const r = Math.round(239 * t.score);
+                const g = Math.round(68 * (1 - t.score));
+                const b = Math.round(68 * (1 - t.score));
+                return `<span class="heatmap-token" style="background:rgba(${r},${g},${b},${0.15 + t.score * 0.5})">${t.token}</span>`;
+            }).join(" ");
+
+            // Scroll to results
+            results.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    </script>
+</body>
+</html>
