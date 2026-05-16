@@ -155,9 +155,6 @@ with gr.Blocks() as demo:
         heatmap_output = gr.HTML(label="Token Heatmap")
 
     with gr.Row():
-        shap_output = gr.Plot(label="SHAP Explanation")
-
-    with gr.Row():
         breakdown_output = gr.JSON(label="Model Breakdown")
 
     analyze_btn.click(
