@@ -4,7 +4,8 @@ emoji: 🧠
 colorFrom: blue
 colorTo: red
 sdk: gradio
-sdk_version: "4.0.0"
+sdk_version: 6.14.0
+python_version: '3.13'
 app_file: app.py
 pinned: false
 ---
@@ -29,7 +30,7 @@ A machine learning system that classifies text as **human-written** or **AI-gene
 - **21 Engineered Features** — Includes vocabulary richness, punctuation patterns, sentence structure, GPT-2 perplexity, and burstiness
 - **Explainability** — SHAP-based feature importance analysis and Captum token-level attribution for interpretable results
 - **Robustness Tested** — Evaluated against adversarial attacks including synonym substitution, character perturbations, and mixed-origin text
-- **Web Interface** — Clean Flask-based UI with confidence visualization and token heatmap analysis
+- **Web Interface** — Gradio UI with confidence visualization and token heatmap analysis
 
 ## Data Sources
 
@@ -49,26 +50,17 @@ cd AI-text-Detector
 pip install -r requirements.txt
 ```
 
-For data collection, create `config/.env` with your API keys:
-
-```
-OPENAI_API_KEY=your_key_here
-ANTHROPIC_API_KEY=your_key_here
-```
-
 ## Usage
 
 ### Train the Models
 
-The trained models are not included in the repository due to file size. Run the following to generate them:
-
 ```bash
 python src/data_collection.py        # Collect and merge datasets
-python src/feature_engineering.py     # Extract 21 statistical + LM features
-python src/train_statistical.py       # Train XGBoost, Random Forest, Logistic Regression
-python src/train_transformer.py       # Fine-tune DistilBERT
-python src/explainability.py          # Generate SHAP + Captum analysis (optional)
-python src/robustness.py              # Run adversarial robustness tests (optional)
+python src/feature_engineering.py    # Extract 21 statistical + LM features
+python src/train_statistical.py      # Train XGBoost, Random Forest, Logistic Regression
+python src/train_transformer.py      # Fine-tune DistilBERT
+python src/explainability.py         # Generate SHAP + Captum analysis (optional)
+python src/robustness.py             # Run adversarial robustness tests (optional)
 ```
 
 > Training auto-detects Apple Silicon (MPS) / CUDA / CPU.
@@ -76,10 +68,8 @@ python src/robustness.py              # Run adversarial robustness tests (option
 ### Run the App
 
 ```bash
-python flask_app.py
+python app.py
 ```
-
-Open http://localhost:5000 in your browser.
 
 ## Tech Stack
 
@@ -87,8 +77,7 @@ Open http://localhost:5000 in your browser.
 - **Explainability:** SHAP, Captum
 - **Data:** pandas, NumPy, HuggingFace Datasets
 - **Visualization:** matplotlib, seaborn
-- **Web App:** Flask, HTML/CSS/JavaScript
-- **APIs:** OpenAI, Anthropic
+- **Web App:** Gradio
 
 ## License
 
