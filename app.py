@@ -1,16 +1,20 @@
 import gradio as gr
 import numpy as np
-from src.feature_engineering import extract_all_features  # adjust path if needed
+from src.feature_engineering import extract_all_features
 import joblib
 import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from huggingface_hub import hf_hub_download
+
+HF_REPO = "Abhadre/AI-Text_detector"
 
 # Load XGBoost
-xgb_model = joblib.load("models/xgboost_model.joblib")
+xgb_path = hf_hub_download(repo_id=HF_REPO, filename="xgboost_model.joblib")
+xgb_model = joblib.load(xgb_path)
 
 # Load DistilBERT
-tokenizer = AutoTokenizer.from_pretrained("models/distilbert")
-bert_model = AutoModelForSequenceClassification.from_pretrained("models/distilbert")
+tokenizer = AutoTokenizer.from_pretrained(HF_REPO, subfolder="distilbert")
+bert_model = AutoModelForSequenceClassification.from_pretrained(HF_REPO, subfolder="distilbert")
 bert_model.eval()
 
 
@@ -30,9 +34,10 @@ FEATURE_COLS = [
 ]
 
 def _extract(text):
-    """Extract exactly 21 features from text (perplexity required)."""
     df = pd.DataFrame({"text": [text]})
-    df = extract_all_features(df, compute_perplexity=True)
+    df = extract_all_features(df, compute_perplexity=False)
+    df["perplexity"] = 0.0
+    df["burstiness"] = 0.0
     return df[FEATURE_COLS].fillna(0)
 
 def predict_text(text):

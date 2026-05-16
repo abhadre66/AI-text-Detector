@@ -1,3 +1,14 @@
+---
+title: AI Text Detector
+emoji: 🧠
+colorFrom: blue
+colorTo: red
+sdk: gradio
+sdk_version: "4.0.0"
+app_file: app.py
+pinned: false
+---
+
 # AI Text Detector
 
 A machine learning system that classifies text as **human-written** or **AI-generated** using an ensemble approach combining statistical feature analysis (XGBoost) with a fine-tuned transformer model (DistilBERT).
